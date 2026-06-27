@@ -16,6 +16,11 @@ navigable with the joystick.
 > this for fun and to learn how mining works, the same way the NerdMiner is meant
 > to be a "lottery ticket." It costs ~1 W to run.
 
+<img width="361" height="360" alt="image" src="https://github.com/user-attachments/assets/ee1b0abf-a7d8-4948-bb4d-eb79690ebc2e" />
+<img width="352" height="364" alt="image" src="https://github.com/user-attachments/assets/27369ebc-efac-4985-9e72-596b15162940" />
+<img width="362" height="368" alt="image" src="https://github.com/user-attachments/assets/a7134af8-b028-4dd4-b76b-80c3f388c6be" />
+<img width="360" height="360" alt="image" src="https://github.com/user-attachments/assets/89a955e1-67d4-4fdf-8900-25975a2f84ef" />
+
 ## Why a Pi Zero?
 
 | Hardware | ~Hashrate | vs ESP32 NerdMiner |
