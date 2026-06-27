@@ -19,8 +19,8 @@ Ele conecta a uma pool solo via protocolo Stratum e tenta encontrar um bloco Bit
 ### ⚡ Instalação rápida
 
 ```bash
-git clone https://github.com/naghust/raspiminer-rpi4.git nerdminer
-cd nerdminer
+git clone https://github.com/naghust/raspiminer-rpi4.git raspiminer
+cd raspiminer
 bash scripts/install.sh
 ```
 
@@ -57,8 +57,8 @@ O script faz tudo automaticamente: instala dependências, compila o cpuminer com
 **1. Clone o repositório:**
 ```bash
 cd ~
-git clone https://github.com/naghust/raspiminer-rpi4.git nerdminer
-cd nerdminer
+git clone https://github.com/naghust/raspiminer-rpi4.git raspiminer
+cd raspiminer
 ```
 
 **2. Execute o instalador:**
@@ -170,8 +170,8 @@ It connects to a solo pool via Stratum protocol and tries to find a Bitcoin bloc
 ### ⚡ Quick install
 
 ```bash
-git clone https://github.com/naghust/raspiminer-rpi4.git nerdminer
-cd nerdminer
+git clone https://github.com/naghust/raspiminer-rpi4.git raspiminer
+cd raspiminer
 bash scripts/install.sh
 ```
 
@@ -208,8 +208,8 @@ The script does everything automatically: installs dependencies, compiles cpumin
 **1. Clone the repository:**
 ```bash
 cd ~
-git clone https://github.com/naghust/raspiminer-rpi4.git nerdminer
-cd nerdminer
+git clone https://github.com/naghust/raspiminer-rpi4.git raspiminer
+cd raspiminer
 ```
 
 **2. Run the installer:**
