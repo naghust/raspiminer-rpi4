@@ -1,141 +1,262 @@
-# pizero-lottery-miner
+# RasPiMiner — RPi4
 
-A [NerdMiner](https://github.com/bitmaker-hub/nerdminer_v2)-style **Bitcoin solo
-"lottery" miner** for the **Raspberry Pi Zero W** + **Waveshare 1.3" LCD HAT**
-(ST7789 240×240, 5-way joystick + 3 buttons).
+> **Fork of [jvxis/nerdminer-pizero](https://github.com/jvxis/nerdminer-pizero)**  
+> Adapted for Raspberry Pi 4 (aarch64) — no LCD required, terminal dashboard included.
 
-It does SHA256d solo mining against a solo pool and shows live stats on the LCD —
-hashrate, shares, your **best share difficulty**, block height and BTC price —
-navigable with the joystick.
+---
 
-> ### ⚠️ This is a lottery, not an investment
-> A Pi Zero W hashes at roughly **0.2–0.3 MH/s**. The Bitcoin network runs at
-> hundreds of **EH/s**, so the expected time for this device to solo-mine a block
-> is on the order of **tens of billions of years**. If you ever do hit one (solo),
-> you keep the *whole* block reward — but you almost certainly never will. Build
-> this for fun and to learn how mining works, the same way the NerdMiner is meant
-> to be a "lottery ticket." It costs ~1 W to run.
+## 🇧🇷 Português
 
-<img width="361" height="360" alt="image" src="https://github.com/user-attachments/assets/ee1b0abf-a7d8-4948-bb4d-eb79690ebc2e" />
-<img width="352" height="364" alt="image" src="https://github.com/user-attachments/assets/27369ebc-efac-4985-9e72-596b15162940" />
-<img width="362" height="368" alt="image" src="https://github.com/user-attachments/assets/a7134af8-b028-4dd4-b76b-80c3f388c6be" />
-<img width="360" height="360" alt="image" src="https://github.com/user-attachments/assets/89a955e1-67d4-4fdf-8900-25975a2f84ef" />
+### O que é isso?
 
-## Why a Pi Zero?
+RasPiMiner é um minerador Bitcoin solo estilo NerdMiner adaptado para o **Raspberry Pi 4**.  
+Ele conecta a uma pool solo (como a [public-pool](https://github.com/benjamin-wilson/public-pool)) via protocolo Stratum e tenta encontrar um bloco Bitcoin — como uma loteria.
 
-| Hardware | ~Hashrate | vs ESP32 NerdMiner |
+> ⚠️ **Aviso:** A probabilidade de encontrar um bloco é extremamente baixa. Este projeto é educacional e experimental. Não espere lucro.
+
+### Diferenças em relação ao projeto original (Pi Zero W)
+
+| Item | Pi Zero W (original) | Pi 4 (este fork) |
 |---|---|---|
-| ESP32 (NerdMiner v2) | 40–78 KH/s | 1× |
-| **Pi Zero W v1.1** (ARMv6, 1 core, no NEON) | **~0.2–0.3 MH/s** | ~4–6× |
-| Pi Zero 2 W (4× Cortex-A53, NEON) | ~1.5–2 MH/s | ~25–40× |
+| Arquitetura | ARMv6 | aarch64 (ARM Cortex-A72) |
+| Flags de compilação | `-march=armv6 -mfpu=vfp` | `-march=native -mtune=native` |
+| Threads padrão | 1 | 2 (configurável até 4) |
+| Display LCD | Waveshare 1.3" HAT | ❌ não utilizado |
+| Dashboard | Tela LCD | Terminal (painel no bash) |
+| Hashrate esperado | ~0.25 MH/s | ~2–6 MH/s |
+| SPI / GPIO | necessário | ❌ não necessário |
 
-The actual hashing is done by **pooler's [cpuminer](https://github.com/pooler/cpuminer)**
-(optimized C). Python only drives the LCD UI — never hash in Python, it's far slower.
+### Requisitos
 
-## Architecture
+- Raspberry Pi 4 (qualquer variante de RAM)
+- Raspberry Pi OS Bookworm 64-bit (aarch64)
+- Conexão com a internet
+- Endereço Bitcoin (bech32, começa com `bc1`)
+- Pool solo compatível com Stratum (ex: [public-pool](https://github.com/benjamin-wilson/public-pool), solo.ckpool.org)
 
-```
- cpuminer (minerd)  --stratum-->  solo pool        \
-        |  writes log                                |  dashboard.py reads
-        v                                            |  all three and renders
-  /var/log/.../cpuminer.log  ---------------------->  the LCD screens
-                                                      |
- pool stats API (best share)  ---------------------->|
- mempool.space (height/price/difficulty) ----------->/
-```
+### Instalação passo a passo
 
-- **`cpuminer`** runs as a service, pointed at a solo pool with your BTC address.
-  `install.sh` builds it from source with a one-line patch (`patches/`) that lets it
-  request a low share difficulty (`mining.suggest_difficulty`) the Pi can meet.
-- **`dashboard.py`** reuses the vendored Waveshare driver (`st7789.py`,
-  `lcd_hardware.py`) to draw NerdMiner-style screens and read inputs.
-- **`stats.py`** merges three sources, each degrading gracefully if offline.
-
-## Hardware
-
-- Raspberry Pi Zero W (this targets the **v1.1**, BCM2835 / ARMv6 / single core).
-- Waveshare 1.3inch LCD HAT (ST7789, 240×240). It seats on the 40-pin header — no
-  wiring needed. GPIO map (BCM): joystick UP=6 DOWN=19 LEFT=5 RIGHT=26 PRESS=13;
-  buttons KEY1=21 KEY2=20 KEY3=16; display RST=27 DC=25 BL=24, SPI0.
-
-## Install
-
+**1. Clone o repositório:**
 ```bash
-git clone <your-repo-url> pizero-lottery-miner
-cd pizero-lottery-miner
-bash scripts/install.sh        # builds cpuminer, installs deps, enables SPI
+cd ~
+git clone https://github.com/naghust/raspiminer-rpi4.git nerdminer
+cd nerdminer
+```
+
+**2. Instale as dependências:**
+```bash
+sudo apt-get update && sudo apt-get install -y \
+    build-essential automake autoconf pkg-config git \
+    libcurl4-openssl-dev libjansson-dev libssl-dev libgmp-dev \
+    python3-pil python3-numpy python3-requests
+```
+
+**3. Compile o cpuminer para aarch64:**
+```bash
+git clone https://github.com/pooler/cpuminer.git .build/cpuminer
+cd .build/cpuminer
+git checkout -q 5f02105940edb61144c09a7eb960bba04a10d5b7
+git apply ~/nerdminer/patches/0001-cpuminer-suggest-difficulty.patch
+./autogen.sh
+./configure CFLAGS="-O3 -march=native -mtune=native"
+make -j2
+sudo make install
+cd ~/nerdminer
+```
+
+**4. Prepare os diretórios:**
+```bash
+sudo mkdir -p /var/log/pizero-miner
+sudo chown $USER /var/log/pizero-miner
 cp config.example.ini config.ini
-nano config.ini                # set your wallet address + pool
 ```
 
-## Configure
-
-Edit `config.ini`:
-
-- `[wallet] address` — your bech32 BTC address (block reward destination).
-- `[pool]` — a **solo** pool. Defaults to `solo.ckpool.org:3333` (no signup, 1%
-  fee); [public-pool.io](https://web.public-pool.io) (zero fee) also works — set
-  `url`, `stats_api` and `stats_api_type = public-pool`. Don't use
-  `pool.nerdminers.org`: it whitelists NerdMiner/Bitaxe firmware by user-agent and
-  rejects cpuminer.
-- `[pool] suggest_difficulty` — the share difficulty the miner asks the pool for
-  (via `mining.suggest_difficulty`). Leave at `1`, the lowest pools accept: a Pi
-  Zero can't meet a pool's default (~10000–100000), so without this the dashboard's
-  share/lottery numbers would never move. Requires the **patched `minerd`** that
-  `install.sh` builds (a stock `minerd` doesn't send the request and ignores it).
-- `[display] refresh_seconds` — keep ≥ 1 so the single core isn't starved.
-
-## Run
-
-Quick test (two terminals):
-
+**5. Configure seu minerador:**
 ```bash
-bash scripts/run-cpuminer.sh     # starts hashing, writes the log
-python3 dashboard.py             # draws the LCD
+nano config.ini
 ```
 
-As auto-starting services:
+Edite os campos principais:
+```ini
+[wallet]
+address = bc1qSEU_ENDERECO_AQUI
+
+[pool]
+url = stratum+tcp://SEU_POOL:3333
+worker = RPi4
+password = x
+suggest_difficulty = 1
+
+[miner]
+threads = 2   ; use até 4 no Pi 4
+```
+
+**6. Teste:**
+```bash
+# Terminal 1 — inicia o minerador
+bash scripts/run-cpuminer.sh
+
+# Terminal 2 — abre o painel
+bash monitor.sh
+```
+
+### Painel do terminal
+
+O `monitor.sh` exibe em tempo real:
+
+- 🌡 Temperatura do Pi
+- ⚡ Hashrate local e da pool
+- ✅ Shares aceitas / rejeitadas
+- 🏆 Melhor dificuldade (worker e pool)
+- ₿ Bloco atual e dificuldade da rede
+- 💰 Preço do BTC (BRL e USD)
+- 🖥 CPU, RAM, frequência, voltagem e status de throttle
+
+### Rodar como serviço (auto-start no boot)
 
 ```bash
-sudo cp systemd/*.service /etc/systemd/system/   # edit paths/User inside first
+sudo cp systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now pizero-cpuminer pizero-dashboard
+sudo systemctl enable --now pizero-cpuminer
 ```
 
-## Controls
+### Dicas
 
-| Input | Action |
-|---|---|
-| Joystick ◀ / ▶ (or ▲ / ▼) | previous / next screen |
-| Joystick press | force data refresh |
-| KEY1 | next screen |
-| KEY2 | toggle backlight |
-| KEY3 | quit dashboard |
+- **Threads:** Use `threads = 2` para não sobrecarregar. Com 4 threads o Pi 4 aquece mais — use dissipador.
+- **Temperatura:** Acima de 80°C o Pi faz throttle (reduz frequência). Monitore pelo painel.
+- **Pool própria:** Se você roda sua própria public-pool, configure `stats_api` com seu IP e porta 8081.
 
-Screens: **Miner** (hashrate / shares), **Lottery** (best share difficulty vs
-network difficulty), **Bitcoin** (price / height / difficulty), **System**
-(IP / temp / load / uptime).
+---
 
-## Notes & tips
+## 🇺🇸 English
 
-- Single core: the miner runs at `Nice=10` so the UI stays responsive.
-- **Share difficulty drives the dashboard.** A pool's share difficulty sets how
-  often you submit a share. At ~0.25 MH/s a pool's default (ckpool ~10000,
-  public-pool ~100000) needs *years* per share, so the share/best-share screens
-  would sit at 0 forever. `install.sh` patches `minerd` to send
-  `mining.suggest_difficulty` so it can request difficulty `1` (set via
-  `[pool] suggest_difficulty`), bringing shares down to ~hours apart. Either way
-  your odds of actually *finding a block* are identical — only the on-screen stats
-  differ. Inspect the negotiated difficulty with `minerd ... -P` (protocol dump).
-- The Pi Zero W's WiFi is enough; no Ethernet/dongle needed.
-- ARMv6 has no NEON, so cpuminer uses the generic C path (the lower hashrate above).
-- Thermals are gentle on the original Zero; a heatsink is optional.
+### What is this?
 
-## Credits & license
+RasPiMiner is a NerdMiner-style Bitcoin solo lottery miner adapted for the **Raspberry Pi 4**.  
+It connects to a solo pool via Stratum protocol and tries to find a Bitcoin block — like a lottery ticket.
 
-- LCD driver vendored/adapted from the Waveshare example code (its MIT-style header
-  is retained in `lcd_hardware.py`).
-- Inspired by [NerdMiner v2](https://github.com/bitmaker-hub/nerdminer_v2).
-- Mining by [pooler/cpuminer](https://github.com/pooler/cpuminer).
+> ⚠️ **Disclaimer:** The probability of finding a block is extremely low. This project is educational and experimental. Do not expect profit.
 
-Project code is MIT licensed — see [LICENSE](LICENSE).
+### Differences from the original project (Pi Zero W)
+
+| Item | Pi Zero W (original) | Pi 4 (this fork) |
+|---|---|---|
+| Architecture | ARMv6 | aarch64 (ARM Cortex-A72) |
+| Compiler flags | `-march=armv6 -mfpu=vfp` | `-march=native -mtune=native` |
+| Default threads | 1 | 2 (configurable up to 4) |
+| LCD Display | Waveshare 1.3" HAT | ❌ not used |
+| Dashboard | LCD screen | Terminal (bash panel) |
+| Expected hashrate | ~0.25 MH/s | ~2–6 MH/s |
+| SPI / GPIO | required | ❌ not required |
+
+### Requirements
+
+- Raspberry Pi 4 (any RAM variant)
+- Raspberry Pi OS Bookworm 64-bit (aarch64)
+- Internet connection
+- Bitcoin address (bech32, starts with `bc1`)
+- Stratum-compatible solo pool (e.g. [public-pool](https://github.com/benjamin-wilson/public-pool), solo.ckpool.org)
+
+### Step-by-step installation
+
+**1. Clone the repository:**
+```bash
+cd ~
+git clone https://github.com/naghust/raspiminer-rpi4.git nerdminer
+cd nerdminer
+```
+
+**2. Install dependencies:**
+```bash
+sudo apt-get update && sudo apt-get install -y \
+    build-essential automake autoconf pkg-config git \
+    libcurl4-openssl-dev libjansson-dev libssl-dev libgmp-dev \
+    python3-pil python3-numpy python3-requests
+```
+
+**3. Build cpuminer for aarch64:**
+```bash
+git clone https://github.com/pooler/cpuminer.git .build/cpuminer
+cd .build/cpuminer
+git checkout -q 5f02105940edb61144c09a7eb960bba04a10d5b7
+git apply ~/nerdminer/patches/0001-cpuminer-suggest-difficulty.patch
+./autogen.sh
+./configure CFLAGS="-O3 -march=native -mtune=native"
+make -j2
+sudo make install
+cd ~/nerdminer
+```
+
+**4. Prepare directories:**
+```bash
+sudo mkdir -p /var/log/pizero-miner
+sudo chown $USER /var/log/pizero-miner
+cp config.example.ini config.ini
+```
+
+**5. Configure your miner:**
+```bash
+nano config.ini
+```
+
+Edit the main fields:
+```ini
+[wallet]
+address = bc1qYOUR_ADDRESS_HERE
+
+[pool]
+url = stratum+tcp://YOUR_POOL:3333
+worker = RPi4
+password = x
+suggest_difficulty = 1
+
+[miner]
+threads = 2   ; use up to 4 on Pi 4
+```
+
+**6. Test:**
+```bash
+# Terminal 1 — start the miner
+bash scripts/run-cpuminer.sh
+
+# Terminal 2 — open the dashboard
+bash monitor.sh
+```
+
+### Terminal dashboard
+
+`monitor.sh` displays in real time:
+
+- 🌡 Pi temperature
+- ⚡ Local and pool hashrate
+- ✅ Accepted / rejected shares
+- 🏆 Best difficulty (worker and pool)
+- ₿ Current block and network difficulty
+- 💰 BTC price (BRL and USD)
+- 🖥 CPU, RAM, frequency, voltage and throttle status
+
+### Run as a service (auto-start on boot)
+
+```bash
+sudo cp systemd/*.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now pizero-cpuminer
+```
+
+### Tips
+
+- **Threads:** Use `threads = 2` to avoid overloading. With 4 threads the Pi 4 runs hotter — use a heatsink.
+- **Temperature:** Above 80°C the Pi throttles (reduces frequency). Monitor via the dashboard.
+- **Own pool:** If you run your own public-pool instance, set `stats_api` with your IP and port 8081.
+
+---
+
+## Credits
+
+- Original project: [jvxis/nerdminer-pizero](https://github.com/jvxis/nerdminer-pizero)
+- cpuminer: [pooler/cpuminer](https://github.com/pooler/cpuminer)
+- Inspired by: [BitMaker-hub/NerdMiner_v2](https://github.com/BitMaker-hub/NerdMiner_v2)
+
+## License
+
+MIT — see [LICENSE](LICENSE)
