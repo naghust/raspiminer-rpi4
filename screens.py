@@ -240,10 +240,13 @@ def screen_system(img, draw, data, fonts, ctx):
         ("session", fmt_uptime(ctx["uptime"])),
         ("pool", ctx["pool_name"]),
     ]
-    val_x = 104
+    # Place the value column just past the widest label (+ a gap), measured
+    # from the actual loaded face so it adapts to whatever font the Pi has.
+    label_font = fonts["small"]
+    val_x = MARGIN + max(_text_w(label_font, lbl) for lbl, _ in rows) + 16
     y = 56
     for label, value in rows:
-        draw.text((MARGIN, y), label, font=fonts["small"], fill=DIM)
+        draw.text((MARGIN, y), label, font=label_font, fill=DIM)
         _value(draw, fonts, "body", str(value), val_x, y - 3, WHITE)
         y += 34
 
