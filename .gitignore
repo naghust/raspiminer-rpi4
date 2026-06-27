@@ -1,0 +1,11 @@
+# Local config holds your wallet address / pool choice
+config.ini
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Logs
+*.log

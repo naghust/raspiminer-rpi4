@@ -1,0 +1,5 @@
+# This project runs on Linux (Raspberry Pi). Force LF on checkout so shell
+# scripts and Python don't get CRLF line endings that break on the Pi.
+* text=auto eol=lf
+*.sh text eol=lf
+*.py text eol=lf

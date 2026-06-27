@@ -1,0 +1,7 @@
+# On Raspberry Pi OS it's usually easier to install these via apt
+# (see scripts/install.sh). Listed here for pip-based setups / venvs.
+Pillow
+numpy
+requests
+spidev
+gpiozero
