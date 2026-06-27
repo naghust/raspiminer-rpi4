@@ -16,7 +16,7 @@ BG = (10, 10, 14)
 ORANGE = (247, 147, 26)      # bitcoin orange
 WHITE = (235, 235, 235)
 GREEN = (0, 255, 163)
-DIM = (168, 172, 188)        # labels -- bright enough to read on the dark BG
+DIM = (205, 210, 226)        # labels -- kept bright; the ST7789 reads dim
 RED = (255, 96, 96)
 
 W = H = 240
@@ -49,7 +49,9 @@ class Fonts:
         "title": ("bold", 22),
         "big": ("bold", 34),
         "body": ("regular", 20),
-        "small": ("regular", 15),
+        # labels: bold + a touch larger so they stay legible on the panel,
+        # where the thin regular face washed out against the dark background.
+        "small": ("bold", 16),
     }
 
     def __init__(self, extra_candidates=None):
