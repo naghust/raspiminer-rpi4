@@ -141,9 +141,9 @@ O `monitor.sh` exibe em tempo real:
 ### Rodar como serviço (auto-start no boot)
 
 ```bash
-sudo cp systemd/*.service /etc/systemd/system/
+sudo cp systemd/raspiminer-cpuminer.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now pizero-cpuminer
+sudo systemctl enable --now raspiminer-cpuminer
 ```
 
 ---
@@ -292,9 +292,9 @@ threads = 2
 ### Run as a service (auto-start on boot)
 
 ```bash
-sudo cp systemd/*.service /etc/systemd/system/
+sudo cp systemd/raspiminer-cpuminer.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now pizero-cpuminer
+sudo systemctl enable --now raspiminer-cpuminer
 ```
 
 ---

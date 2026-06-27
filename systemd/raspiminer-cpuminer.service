@@ -1,0 +1,17 @@
+[Unit]
+Description=RasPiMiner - cpuminer (SHA256d solo lottery)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=admin
+WorkingDirectory=/home/admin/raspiminer
+ExecStart=/usr/bin/env bash scripts/run-cpuminer.sh
+Restart=always
+RestartSec=10
+# Pi 4 tem 4 nucleos — Nice=0 para melhor performance
+Nice=0
+
+[Install]
+WantedBy=multi-user.target
